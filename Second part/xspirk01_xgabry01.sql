@@ -44,10 +44,10 @@ CREATE TABLE organizace (
 );
 
 CREATE TABLE zamestnanec (
-    rodne_cislo NUMBER(10) NOT NULL CHECK (REGEXP_LIKE(rodne_cislo, '\d{2}(0[1-9]|1[0-2]|5[1-9]|6[0-2])(0[1-9]|1[0-9]|2[0-9]|3[0-1])\/?\d{3,4}')) PRIMARY KEY,
+    rodne_cislo NUMBER(10) NOT NULL CHECK (REGEXP_LIKE(rodne_cislo, '\d{2}(0[1-9]|1[0-2]|5[1-9]|6[0-2])(0[1-9]|1[0-9]|2[0-9]|3[0-1])\d{3,4}')) PRIMARY KEY, --bez lomitka
     meno VARCHAR(50) NOT NULL,
     priezvisko VARCHAR(50) NOT NULL,
-    tel_cislo NUMBER(12) NOT NULL , --berieme s predvolbou bez pluska
+    tel_cislo NUMBER(12) NOT NULL, --berieme s predvolbou bez pluska
     mail VARCHAR(50)
 );
 
@@ -61,19 +61,19 @@ CREATE TABLE smlouva (
 );
 
 CREATE TABLE vyvojar (
-    id_vyvojar INT GENERATED ALWAYS AS IDENTITY (START WITH 1 increment by 1) primary key,
+    rodne_cislo NUMBER(10) NOT NULL CHECK (REGEXP_LIKE(rodne_cislo, '\d{2}(0[1-9]|1[0-2]|5[1-9]|6[0-2])(0[1-9]|1[0-9]|2[0-9]|3[0-1])\d{3,4}')),
     prog_jazyk VARCHAR(20),
-    FOREIGN KEY (id_vyvojar) REFERENCES zamestnanec(rodne_cislo)
+    FOREIGN KEY (rodne_cislo) REFERENCES zamestnanec(rodne_cislo)
 );
-
 
 CREATE TABLE manazer (
-    id_manazer INT GENERATED ALWAYS AS IDENTITY (START WITH 1 increment by 1) primary key,
+    rodne_cislo NUMBER(10) NOT NULL CHECK (REGEXP_LIKE(rodne_cislo, '\d{2}(0[1-9]|1[0-2]|5[1-9]|6[0-2])(0[1-9]|1[0-9]|2[0-9]|3[0-1])\d{3,4}')),
     oddelenie VARCHAR(7) CHECK (oddelenie IN('Vývojářske oddělení', 'Logistika a prodej', 'Technické oddělení', 'Finanční oddělení', 'Oddelenie plánování', 'Testovací oddělení')),
-    FOREIGN KEY (id_manazer) REFERENCES zamestnanec(rodne_cislo)
+    FOREIGN KEY (rodne_cislo) REFERENCES zamestnanec(rodne_cislo)
 );
 
+INSERT INTO zamestnanec VALUES(3002056954, 'Adamko', 'Novak', 123456789012, 'asdadsadasdfsdfsdsfsd');
+INSERT INTO zamestnanec VALUES(4562056954, 'Rudolf', 'Hruska', 789654321012, 'rudolf@gmail.com');
+INSERT INTO zamestnanec VALUES(4562056953, 'Rudolf', 'Hruska', 289654321012, 'rudolf@gmail.com');
 
-
-
-
+INSERT INTO vyvojar(rodne_cislo, prog_jazyk) VALUES(3002056954, 'Python');
