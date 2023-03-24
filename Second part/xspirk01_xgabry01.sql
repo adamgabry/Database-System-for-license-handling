@@ -44,7 +44,7 @@ CREATE TABLE organizace (
 );
 
 CREATE TABLE zamestnanec (
-    rodne_cislo NUMBER(10) NOT NULL PRIMARY KEY,
+    rodne_cislo NUMBER(10) NOT NULL CHECK (REGEXP_LIKE(rodne_cislo, '\d{2}(0[1-9]|1[0-2]|5[1-9]|6[0-2])(0[1-9]|1[0-9]|2[0-9]|3[0-1])\/?\d{3,4}')) PRIMARY KEY,
     meno VARCHAR(50) NOT NULL,
     priezvisko VARCHAR(50) NOT NULL,
     tel_cislo NUMBER(12) NOT NULL , --berieme s predvolbou bez pluska
