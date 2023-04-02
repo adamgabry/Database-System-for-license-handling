@@ -90,10 +90,10 @@ CREATE TABLE manazer (
 
 ----------------INPUT TO TABLES--------------------
 
-INSERT INTO zamestnanec VALUES(3002056954, 'Adamko', 'Novak', '+123456789012', 'asdadsada@gmail.com');
-INSERT INTO zamestnanec VALUES(3502316955, 'Marek', 'Hess', '+789654000012', 'marek@gmail.com');
-INSERT INTO zamestnanec VALUES(2402056966, 'Jan', 'Plecko', '+123456789012', 'asdadsada@gmail.com');
-INSERT INTO zamestnanec VALUES(3502316977, 'Jarek', 'Hecko', '+789654000012', 'marek@gmail.com');
+INSERT INTO zamestnanec VALUES(3002056954, 'adam', 'Novak', '+123456789012', 'asdadsada@gmail.com');
+INSERT INTO zamestnanec VALUES(3502316955, 'marek', 'Hess', '+789654000012', 'marek@gmail.com');
+INSERT INTO zamestnanec VALUES(2402056966, 'jan', 'Plecko', '+123456789012', 'asdadsada@gmail.com');
+INSERT INTO zamestnanec VALUES(3502316977, 'jarek', 'Hecko', '+789654000012', 'marek@gmail.com');
 
 
 INSERT INTO vyvojar(rodne_cislo, prog_jazyk) VALUES(3002056954, 'Python');
@@ -104,21 +104,25 @@ INSERT INTO manazer(rodne_cislo, oddeleni) VALUES(2402056966, 'Logistika a prode
 INSERT INTO manazer(rodne_cislo, oddeleni) VALUES(3502316955, 'Vyvojarske oddeleni');
 
 
-INSERT INTO aplikace(NAZOV, POPIS, PLATFORMA, WEBSTRANKA) VALUES('firstapp', 'krasna appka', 'IOS', 'firstapp.com');
-INSERT INTO aplikace(nazov, popis, platforma, webstranka) VALUES('secondapp', 'vyborna appka', 'LINUX', 'secondtapp.com');
+INSERT INTO aplikace(nazov, popis, platforma, webstranka) VALUES('firstapp', 'krasna appka', 'IOS', 'firstapp.com');
+INSERT INTO aplikace(nazov, popis, platforma, webstranka) VALUES('secondapp', 'vyborna appka', 'Android', 'secondtapp.com');
 INSERT INTO aplikace(nazov, popis, platforma, webstranka) VALUES('thirdapp', 'mobilni appka', 'Android', 'thirdapp.com');
 
 
-INSERT INTO verze(nazov, popis, datum_vydania, id_aplikace) VALUES('v2', 'edited config', '24-03-2006', 1);
-INSERT INTO verze(nazov, popis, datum_vydania, id_aplikace) VALUES('v3.4', 'for config', '21-03-2002', 2);
+INSERT INTO verze(nazov, popis, datum_vydania, id_aplikace) VALUES('v2', 'edited config', '24-03-2006', 2);
+INSERT INTO verze(nazov, popis, datum_vydania, id_aplikace) VALUES('v3.4', 'for config', '21-03-2002', 1);
+INSERT INTO verze(nazov, popis, datum_vydania, id_aplikace) VALUES('v9.4', 'final version', '21-03-2002', 3);
 
 
 INSERT INTO smlouva(DATUM_ZAVRETIA, PREDAVAJUCI, KUPUJUCI) VALUES('24-04-2015', 'adam', 'marek');
+INSERT INTO smlouva(DATUM_ZAVRETIA, PREDAVAJUCI, KUPUJUCI) VALUES('24-04-2015', 'adam', 'jozef');
+INSERT INTO smlouva(DATUM_ZAVRETIA, PREDAVAJUCI, KUPUJUCI) VALUES('20-04-2015', 'adam', 'anicka');
 INSERT INTO smlouva(DATUM_ZAVRETIA, PREDAVAJUCI, KUPUJUCI) VALUES('04-06-2016', 'marek', 'adam');
 
 
 INSERT INTO doba_smlouvy(UCINOST_OD, UCINOST_DO, ID_ZMLUVY, RODNE_CISLO) VALUES('24-04-2015','24-04-2022', 1, 3502316955);
 INSERT INTO doba_smlouvy(UCINOST_OD, UCINOST_DO, ID_ZMLUVY, RODNE_CISLO) VALUES('26-02-2012','21-12-2032', 2, 3502316977);
+INSERT INTO doba_smlouvy(UCINOST_OD, UCINOST_DO, ID_ZMLUVY, RODNE_CISLO) VALUES('26-02-2012','21-12-2032', 3, 2402056966);
 
 
 INSERT INTO ORGANIZACE(ICO, OBCHODNY_NAZOV, SIDLO, PRAVNA_FORMA, PREDMET_PODNIKANIA, IBAN)
@@ -129,3 +133,27 @@ VALUES('87654321', 'Google', 'Amsterdam', 's.r.o.', 'vyvoj regexu','CZ34 5634 78
 
 INSERT INTO pocet_instalaci(pocet_instalaci, ID_ZMLUVY, ID_VERZE) VALUES(10000, 1, 1);
 INSERT INTO pocet_instalaci(pocet_instalaci, ID_ZMLUVY, ID_VERZE) VALUES(200000, 2, 2);
+INSERT INTO pocet_instalaci(pocet_instalaci, ID_ZMLUVY, ID_VERZE) VALUES(1000000, 3, 3);
+
+COMMIT;
+
+--1. Vypise zamestnanca spolu s programovacim jazykom, ktory ovlada
+SELECT meno, priezvisko, prog_jazyk AS Jazyk
+FROM zamestnanec NATURAL JOIN vyvojar;
+
+--2. Vypis verzii, ich datum vydania a naslede maximalny pocet instalacii
+SELECT verze.nazov Verzia, verze.datum_vydania, pocet_instalaci.pocet_instalaci
+FROM pocet_instalaci INNER JOIN verze ON pocet_instalaci.id_verze = verze.id_verze;
+
+--3. Ake aplikacie boli vytvorené pre android? (názov aplikacie, verzia, pocet instalacii)
+SELECT A.nazov, V.nazov Verzia, V.datum_vydania , pocet_instalaci
+FROM aplikace A, verze V, pocet_instalaci P
+WHERE A.id_aplikace = V.id_aplikace AND V.id_verze = P.id_verze AND A.platforma='Android';
+
+--4. Kolko zmluv podpisali zamestnanci s rovnakym krstnym menom? (Pocet, pocet_stiahnutia)
+SELECT meno, telefon, COUNT(*) Pocet_podpisov
+FROM zamestnanec Z, smlouva S
+WHERE Z.meno=S.predavajuci GROUP BY meno, telefon
+
+
+
