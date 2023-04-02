@@ -30,7 +30,7 @@ CREATE TABLE verze (
     id_verze INT GENERATED ALWAYS AS IDENTITY (START WITH 1 increment by 1) primary key,
     nazov VARCHAR(255) NOT NULL,
     popis VARCHAR(500) NOT NULL,
-    datum_vydania VARCHAR(10) NOT NULL CHECK (REGEXP_LIKE(datum_vydania,'^(0?[1-9]|[1-2][0-9]|3[0-1])-(0?[1-9]|1[0-2])-(\d{4})$')), --aj ked existuje DATE pouzili sme vlastny regex v tvare DD-MM-YYYY
+    datum_vydania DATE NOT NULL,
     id_aplikace INT NOT NULL,
     FOREIGN KEY (id_aplikace) REFERENCES aplikace(id_aplikace) ON DELETE CASCADE
 );
@@ -54,7 +54,7 @@ CREATE TABLE zamestnanec (
 
 CREATE TABLE smlouva (
     id_zmluvy INT GENERATED ALWAYS AS IDENTITY (START WITH 1 increment by 1) primary key,
-    datum_zavretia VARCHAR(10) NOT NULL CHECK (REGEXP_LIKE(datum_zavretia,'^(0?[1-9]|[1-2][0-9]|3[0-1])-(0?[1-9]|1[0-2])-(\d{4})$')), --aj ked existuje DATE pouzili sme vlastny regex v tvare DD-MM-YYYY
+    datum_zavretia DATE NOT NULL,
     predavajuci VARCHAR(100) NOT NULL,
     kupujuci VARCHAR(100) NOT NULL
 );
@@ -68,8 +68,8 @@ CREATE TABLE pocet_instalaci(
 );
 
 CREATE TABLE doba_smlouvy (
-    ucinost_od VARCHAR(10) NOT NULL CHECK (REGEXP_LIKE(ucinost_od,'^(0?[1-9]|[1-2][0-9]|3[0-1])-(0?[1-9]|1[0-2])-(\d{4})$')), --aj ked existuje DATE pouzili sme vlastny regex v tvare DD-MM-YYYY
-    ucinost_do VARCHAR(10) NOT NULL CHECK (REGEXP_LIKE(ucinost_do,'^(0?[1-9]|[1-2][0-9]|3[0-1])-(0?[1-9]|1[0-2])-(\d{4})$')), --aj ked existuje DATE pouzili sme vlastny regex v tvare DD-MM-YYYY
+    ucinost_od DATE NOT NULL,
+    ucinost_do DATE NOT NULL,
     id_zmluvy INT,
     rodne_cislo INT,
     FOREIGN KEY (id_zmluvy) REFERENCES smlouva(id_zmluvy),
@@ -90,18 +90,20 @@ CREATE TABLE manazer (
 
 ----------------INPUT TO TABLES--------------------
 
-INSERT INTO zamestnanec VALUES(3002056954, 'adam', 'Novak', '+123456789012', 'asdadsada@gmail.com');
-INSERT INTO zamestnanec VALUES(3502316955, 'marek', 'Hess', '+789654000012', 'marek@gmail.com');
-INSERT INTO zamestnanec VALUES(2402056966, 'jan', 'Plecko', '+123456789012', 'asdadsada@gmail.com');
-INSERT INTO zamestnanec VALUES(3502316977, 'jarek', 'Hecko', '+789654000012', 'marek@gmail.com');
+INSERT INTO zamestnanec VALUES(3002056954, 'adam', 'Novak', '+091056789012', 'asdadsada@gmail.com');
+INSERT INTO zamestnanec VALUES(1202316955, 'marek', 'Hess', '+789654000012', 'marek@gmail.com');
+INSERT INTO zamestnanec VALUES(2402056966, 'jan', 'Plecko', '+412356789012', 'asdadsada@gmail.com');
+INSERT INTO zamestnanec VALUES(2902316977, 'tomas', 'Hecko', '+456456789012', 'marek@gmail.com');
+INSERT INTO zamestnanec VALUES(2402056986, 'janek', 'Plecko', '+498756789012', 'asdadsada@gmail.com');
+INSERT INTO zamestnanec VALUES(3002316977, 'jarek', 'Hecko', '+789654000012', 'marek@gmail.com');
 
 
 INSERT INTO vyvojar(rodne_cislo, prog_jazyk) VALUES(3002056954, 'Python');
-INSERT INTO vyvojar(rodne_cislo, prog_jazyk) VALUES(3502316977, 'PHP');
+INSERT INTO vyvojar(rodne_cislo, prog_jazyk) VALUES(2402056966, 'PHP');
 
 
 INSERT INTO manazer(rodne_cislo, oddeleni) VALUES(2402056966, 'Logistika a prodej');
-INSERT INTO manazer(rodne_cislo, oddeleni) VALUES(3502316955, 'Vyvojarske oddeleni');
+INSERT INTO manazer(rodne_cislo, oddeleni) VALUES(2402056966, 'Vyvojarske oddeleni');
 
 
 INSERT INTO aplikace(nazov, popis, platforma, webstranka) VALUES('firstapp', 'krasna appka', 'IOS', 'firstapp.com');
@@ -109,20 +111,20 @@ INSERT INTO aplikace(nazov, popis, platforma, webstranka) VALUES('secondapp', 'v
 INSERT INTO aplikace(nazov, popis, platforma, webstranka) VALUES('thirdapp', 'mobilni appka', 'Android', 'thirdapp.com');
 
 
-INSERT INTO verze(nazov, popis, datum_vydania, id_aplikace) VALUES('v2', 'edited config', '24-03-2006', 2);
-INSERT INTO verze(nazov, popis, datum_vydania, id_aplikace) VALUES('v3.4', 'for config', '21-03-2002', 1);
-INSERT INTO verze(nazov, popis, datum_vydania, id_aplikace) VALUES('v9.4', 'final version', '21-03-2002', 3);
+INSERT INTO verze(nazov, popis, datum_vydania, id_aplikace) VALUES('v2', 'edited config',TO_DATE('24-03-2006', 'DD-MM-YYYY'), 2);
+INSERT INTO verze(nazov, popis, datum_vydania, id_aplikace) VALUES('v3.4', 'for config', TO_DATE('21-03-2021', 'DD-MM-YYYY'), 1);
+INSERT INTO verze(nazov, popis, datum_vydania, id_aplikace) VALUES('v9.4', 'final version',TO_DATE('21-03-2023', 'DD-MM-YYYY'), 3);
 
 
-INSERT INTO smlouva(DATUM_ZAVRETIA, PREDAVAJUCI, KUPUJUCI) VALUES('24-04-2015', 'adam', 'marek');
-INSERT INTO smlouva(DATUM_ZAVRETIA, PREDAVAJUCI, KUPUJUCI) VALUES('24-04-2015', 'adam', 'jozef');
-INSERT INTO smlouva(DATUM_ZAVRETIA, PREDAVAJUCI, KUPUJUCI) VALUES('20-04-2015', 'adam', 'anicka');
-INSERT INTO smlouva(DATUM_ZAVRETIA, PREDAVAJUCI, KUPUJUCI) VALUES('04-06-2016', 'marek', 'adam');
+INSERT INTO smlouva(DATUM_ZAVRETIA, PREDAVAJUCI, KUPUJUCI) VALUES(TO_DATE('24-04-2015', 'DD-MM-YYYY'), 'adam', 'marek');
+INSERT INTO smlouva(DATUM_ZAVRETIA, PREDAVAJUCI, KUPUJUCI) VALUES(TO_DATE('24-04-2015', 'DD-MM-YYYY'), 'adam', 'jozef');
+INSERT INTO smlouva(DATUM_ZAVRETIA, PREDAVAJUCI, KUPUJUCI) VALUES(TO_DATE('20-04-2015', 'DD-MM-YYYY'), 'adam', 'anicka');
+INSERT INTO smlouva(DATUM_ZAVRETIA, PREDAVAJUCI, KUPUJUCI) VALUES(TO_DATE('04-06-2016', 'DD-MM-YYYY'), 'marek', 'adam');
 
 
-INSERT INTO doba_smlouvy(UCINOST_OD, UCINOST_DO, ID_ZMLUVY, RODNE_CISLO) VALUES('24-04-2015','24-04-2022', 1, 3502316955);
-INSERT INTO doba_smlouvy(UCINOST_OD, UCINOST_DO, ID_ZMLUVY, RODNE_CISLO) VALUES('26-02-2012','21-12-2032', 2, 3502316977);
-INSERT INTO doba_smlouvy(UCINOST_OD, UCINOST_DO, ID_ZMLUVY, RODNE_CISLO) VALUES('26-02-2012','21-12-2032', 3, 2402056966);
+INSERT INTO doba_smlouvy(UCINOST_OD, UCINOST_DO, ID_ZMLUVY, RODNE_CISLO) VALUES(TO_DATE('24-04-2015', 'DD-MM-YYYY'),TO_DATE('24-04-2022', 'DD-MM-YYYY'), 1, 3002056954);
+INSERT INTO doba_smlouvy(UCINOST_OD, UCINOST_DO, ID_ZMLUVY, RODNE_CISLO) VALUES(TO_DATE('26-02-2012', 'DD-MM-YYYY'),TO_DATE('21-12-2032', 'DD-MM-YYYY'), 2, 2402056966);
+INSERT INTO doba_smlouvy(UCINOST_OD, UCINOST_DO, ID_ZMLUVY, RODNE_CISLO) VALUES(TO_DATE('26-02-2012', 'DD-MM-YYYY'),TO_DATE('21-12-2032', 'DD-MM-YYYY'), 3, 3002316977);
 
 
 INSERT INTO ORGANIZACE(ICO, OBCHODNY_NAZOV, SIDLO, PRAVNA_FORMA, PREDMET_PODNIKANIA, IBAN)
@@ -153,7 +155,10 @@ WHERE A.id_aplikace = V.id_aplikace AND V.id_verze = P.id_verze AND A.platforma=
 --4. Kolko zmluv podpisali zamestnanci s rovnakym krstnym menom? (Pocet, pocet_stiahnutia)
 SELECT meno, telefon, COUNT(*) Pocet_podpisov
 FROM zamestnanec Z, smlouva S
-WHERE Z.meno=S.predavajuci GROUP BY meno, telefon
+WHERE Z.meno=S.predavajuci GROUP BY meno, telefon;
 
-
+--5. Vypise zemstnancov, ktory nezacali pracovat pre firmu v rozmedzi  12.08.2012 - 32.12.2024 (meno, priezvisko, mail)
+SELECT meno, priezvisko, mail
+FROM zamestnanec
+WHERE NOT EXISTS(SELECT * FROM doba_smlouvy D WHERE zamestnanec.rodne_cislo = D.rodne_cislo AND ucinost_od BETWEEN TO_DATE('01-01-2012', 'DD-MM-YYYY') AND TO_DATE('31-12-2014', 'DD-MM-YYYY'));
 
