@@ -138,39 +138,3 @@ INSERT INTO pocet_instalaci(pocet_instalaci, ID_ZMLUVY, ID_VERZE) VALUES(200000,
 INSERT INTO pocet_instalaci(pocet_instalaci, ID_ZMLUVY, ID_VERZE) VALUES(1000000, 3, 3);
 
 COMMIT;
-
---1. Vypise zamestnanca spolu s programovacim jazykom, ktory ovlada
-SELECT meno, priezvisko, prog_jazyk AS Jazyk
-FROM zamestnanec NATURAL JOIN vyvojar;
-
---2. Vypis verzii, ich datum vydania a naslede maximalny pocet instalacii
-SELECT verze.nazov Verzia, verze.datum_vydania, pocet_instalaci.pocet_instalaci
-FROM pocet_instalaci INNER JOIN verze ON pocet_instalaci.id_verze = verze.id_verze;
-
---3. Ake aplikacie boli vytvorene pre android? (nazov aplikacie, verzia, pocet instalacii)
-SELECT A.nazov, V.nazov Verzia, V.datum_vydania , pocet_instalaci
-FROM aplikace A, verze V, pocet_instalaci P
-WHERE A.id_aplikace = V.id_aplikace AND V.id_verze = P.id_verze AND A.platforma='Android';
-
---4. Kolko zmluv podpisali zamestnanci s rovnakym krstnym menom? (Pocet, pocet_stiahnutia)
-SELECT meno, telefon, COUNT(*) Pocet_podpisov
-FROM zamestnanec Z, smlouva S
-WHERE Z.meno=S.predavajuci GROUP BY meno, telefon;
-
---5. Vypise zamestnancov, ktory nezacali pracovat pre firmu v rozmedzi  12.08.2012 - 32.12.2024 (meno, priezvisko, mail)
-SELECT meno, priezvisko, mail
-FROM zamestnanec
-WHERE NOT EXISTS(SELECT * FROM doba_smlouvy D WHERE zamestnanec.rodne_cislo = D.rodne_cislo AND ucinost_od BETWEEN TO_DATE('01-01-2012', 'DD-MM-YYYY') AND TO_DATE('31-12-2014', 'DD-MM-YYYY'));
-
---6. Vraci vsechny zamestnance, kteri jsou Python vyvojari podle rodneho cisla (dotaz s predikatem IN s vnorenym selectem)
-SELECT * FROM zamestnanec
-WHERE rodne_cislo IN (
-    SELECT rodne_cislo FROM vyvojar
-    WHERE prog_jazyk = 'Python'     --second condition
-);
-
---7. Zobraz pocet aplikaci podle platformy a zobraz posledni verzi aplikace(2. GROUP BY, agregacni funkce)
-SELECT aplikace.platforma, COUNT(*) AS pocet_aplikacii, MAX(verze.datum_vydania) AS posledna_verzia
-FROM aplikace
-JOIN verze ON aplikace.id_aplikace = verze.id_aplikace
-GROUP BY aplikace.platforma;
