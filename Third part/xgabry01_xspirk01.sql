@@ -61,7 +61,7 @@ CREATE TABLE smlouva (
 
 CREATE TABLE pocet_instalaci(
     pocet_instalaci INT NOT NULL,
-    id_zmluvy INT,
+    id_zmluvy INT PRIMARY KEY,
     id_verze INT,
     FOREIGN KEY (id_zmluvy) REFERENCES smlouva(id_zmluvy),
     FOREIGN KEY (id_verze) REFERENCES verze(id_verze)
@@ -70,31 +70,31 @@ CREATE TABLE pocet_instalaci(
 CREATE TABLE doba_smlouvy (
     ucinost_od DATE NOT NULL,
     ucinost_do DATE NOT NULL,
-    id_zmluvy INT,
+    id_zmluvy INT PRIMARY KEY,
     rodne_cislo INT,
     FOREIGN KEY (id_zmluvy) REFERENCES smlouva(id_zmluvy),
     FOREIGN KEY (rodne_cislo) REFERENCES zamestnanec(rodne_cislo)
 );
 
 CREATE TABLE vyvojar (
-    rodne_cislo NUMBER(10) NOT NULL CHECK (REGEXP_LIKE(rodne_cislo, '\d{2}(0[1-9]|1[0-2]|5[1-9]|6[0-2])(0[1-9]|1[0-9]|2[0-9]|3[0-1])\d{3,4}')), --rodne cislo bez lomitku
+    rodne_cislo NUMBER(10) NOT NULL PRIMARY KEY CHECK (REGEXP_LIKE(rodne_cislo, '\d{2}(0[1-9]|1[0-2]|5[1-9]|6[0-2])(0[1-9]|1[0-9]|2[0-9]|3[0-1])\d{3,4}')), --rodne cislo bez lomitku
     prog_jazyk VARCHAR(20),
     FOREIGN KEY (rodne_cislo) REFERENCES zamestnanec(rodne_cislo)
 );
 
 CREATE TABLE manazer (
-    rodne_cislo NUMBER(10) NOT NULL CHECK (REGEXP_LIKE(rodne_cislo, '\d{2}(0[1-9]|1[0-2]|5[1-9]|6[0-2])(0[1-9]|1[0-9]|2[0-9]|3[0-1])\d{3,4}')), --rodne cislo bez lomitku
+    rodne_cislo NUMBER(10) NOT NULL PRIMARY KEY CHECK (REGEXP_LIKE(rodne_cislo, '\d{2}(0[1-9]|1[0-2]|5[1-9]|6[0-2])(0[1-9]|1[0-9]|2[0-9]|3[0-1])\d{3,4}')), --rodne cislo bez lomitku
     oddeleni VARCHAR(25) CHECK (oddeleni IN('Vyvojarske oddeleni', 'Logistika a prodej', 'Technicke oddeleni', 'Financni oddeleni', 'Oddeleni planovani', 'Testovaci oddeleni')),
     FOREIGN KEY (rodne_cislo) REFERENCES zamestnanec(rodne_cislo)
 );
 
 ----------------INPUT TO TABLES--------------------
 
-INSERT INTO zamestnanec VALUES(3002056954, 'adam', 'Novak', '+091056789012', 'asdadsada@gmail.com');
+INSERT INTO zamestnanec VALUES(3002056954, 'adam', 'Novak', '+091056789012', 'adamko@gmail.com');
 INSERT INTO zamestnanec VALUES(1202316955, 'marek', 'Hess', '+789654000012', 'marek123@gmail.com');
-INSERT INTO zamestnanec VALUES(2402056966, 'jan', 'Plecko', '+412356789012', 'asdadsada@gmail.com');
+INSERT INTO zamestnanec VALUES(2402056966, 'jan', 'Plecko', '+412356789012', 'plec123@gmail.com');
 INSERT INTO zamestnanec VALUES(2902316977, 'tomas', 'Hecko', '+456456789012', 'marek456@gmail.com');
-INSERT INTO zamestnanec VALUES(2402056986, 'janek', 'Plecko', '+498756789012', 'asdadsada@gmail.com');
+INSERT INTO zamestnanec VALUES(2402056986, 'janek', 'Plecko', '+498756789012', 'janek@gmail.com');
 INSERT INTO zamestnanec VALUES(3002316977, 'jarek', 'Hecko', '+789654000012', 'marek789@gmail.com');
 
 
@@ -103,7 +103,7 @@ INSERT INTO vyvojar(rodne_cislo, prog_jazyk) VALUES(2402056966, 'PHP');
 
 
 INSERT INTO manazer(rodne_cislo, oddeleni) VALUES(2402056966, 'Logistika a prodej');
-INSERT INTO manazer(rodne_cislo, oddeleni) VALUES(2402056966, 'Vyvojarske oddeleni');
+INSERT INTO manazer(rodne_cislo, oddeleni) VALUES(3002316977, 'Vyvojarske oddeleni');
 
 
 INSERT INTO aplikace(nazov, popis, platforma, webstranka) VALUES('firstapp', 'krasna appka', 'IOS', 'firstapp.com');
@@ -139,11 +139,11 @@ INSERT INTO pocet_instalaci(pocet_instalaci, ID_ZMLUVY, ID_VERZE) VALUES(1000000
 
 COMMIT;
 
---1. Vypise zamestnanca spolu s programovacim jazykom, ktory ovlada (meno, priezvisko, programovaci jazyk)
+--1. Vypise zamestnanca spolu s programovacim jazykom, ktory ovlada
 SELECT meno, priezvisko, prog_jazyk AS Jazyk
 FROM zamestnanec NATURAL JOIN vyvojar;
 
---2. Vypis verzii, ich datum vydania a naslede maximalny pocet instalacii  (verzia, datum vydania, pocet instalacii)
+--2. Vypis verzii, ich datum vydania a naslede maximalny pocet instalacii
 SELECT verze.nazov Verzia, verze.datum_vydania, pocet_instalaci.pocet_instalaci
 FROM pocet_instalaci INNER JOIN verze ON pocet_instalaci.id_verze = verze.id_verze;
 
