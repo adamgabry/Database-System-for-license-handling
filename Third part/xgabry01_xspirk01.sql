@@ -1,5 +1,5 @@
 -----------------------------------------------
----- SQL SCRIPT -> SECOND PART OF PROJECT  ----
+---- SQL SCRIPT -> THIRD PART OF PROJECT  ----
 -- Autor: Marek Spirka -- xlogin: xspirk01 ----
 -- Autor: Adam Gabrys  -- xlogin: xgabry01 ----
 -----------------------------------------------
@@ -169,7 +169,7 @@ WHERE rodne_cislo IN (
     WHERE prog_jazyk = 'Python'     --second condition
 );
 
---7. Zobraz pocet aplikaci podle platformy a zobraz posledni verzi aplikace(2. GROUP BY, agregacni funkce)
+--7. Zobraz pocet aplikaci podle platfo@rmy a zobraz posledni verzi aplikace(2. GROUP BY, agregacni funkce)
 SELECT aplikace.platforma, COUNT(*) AS pocet_aplikacii, MAX(verze.datum_vydania) AS posledna_verzia
 FROM aplikace
 JOIN verze ON aplikace.id_aplikace = verze.id_aplikace
