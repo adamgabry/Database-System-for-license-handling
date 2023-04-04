@@ -91,11 +91,11 @@ CREATE TABLE manazer (
 ----------------INPUT TO TABLES--------------------
 
 INSERT INTO zamestnanec VALUES(3002056954, 'adam', 'Novak', '+091056789012', 'asdadsada@gmail.com');
-INSERT INTO zamestnanec VALUES(1202316955, 'marek', 'Hess', '+789654000012', 'marek@gmail.com');
+INSERT INTO zamestnanec VALUES(1202316955, 'marek', 'Hess', '+789654000012', 'marek123@gmail.com');
 INSERT INTO zamestnanec VALUES(2402056966, 'jan', 'Plecko', '+412356789012', 'asdadsada@gmail.com');
-INSERT INTO zamestnanec VALUES(2902316977, 'tomas', 'Hecko', '+456456789012', 'marek@gmail.com');
+INSERT INTO zamestnanec VALUES(2902316977, 'tomas', 'Hecko', '+456456789012', 'marek456@gmail.com');
 INSERT INTO zamestnanec VALUES(2402056986, 'janek', 'Plecko', '+498756789012', 'asdadsada@gmail.com');
-INSERT INTO zamestnanec VALUES(3002316977, 'jarek', 'Hecko', '+789654000012', 'marek@gmail.com');
+INSERT INTO zamestnanec VALUES(3002316977, 'jarek', 'Hecko', '+789654000012', 'marek789@gmail.com');
 
 
 INSERT INTO vyvojar(rodne_cislo, prog_jazyk) VALUES(3002056954, 'Python');
@@ -147,7 +147,7 @@ FROM zamestnanec NATURAL JOIN vyvojar;
 SELECT verze.nazov Verzia, verze.datum_vydania, pocet_instalaci.pocet_instalaci
 FROM pocet_instalaci INNER JOIN verze ON pocet_instalaci.id_verze = verze.id_verze;
 
---3. Ake aplikacie boli vytvorené pre android? (názov aplikacie, verzia, pocet instalacii)
+--3. Ake aplikacie boli vytvorene pre android? (nazov aplikacie, verzia, pocet instalacii)
 SELECT A.nazov, V.nazov Verzia, V.datum_vydania , pocet_instalaci
 FROM aplikace A, verze V, pocet_instalaci P
 WHERE A.id_aplikace = V.id_aplikace AND V.id_verze = P.id_verze AND A.platforma='Android';
@@ -157,8 +157,20 @@ SELECT meno, telefon, COUNT(*) Pocet_podpisov
 FROM zamestnanec Z, smlouva S
 WHERE Z.meno=S.predavajuci GROUP BY meno, telefon;
 
---5. Vypise zemstnancov, ktory nezacali pracovat pre firmu v rozmedzi  12.08.2012 - 32.12.2024 (meno, priezvisko, mail)
+--5. Vypise zamestnancov, ktory nezacali pracovat pre firmu v rozmedzi  12.08.2012 - 32.12.2024 (meno, priezvisko, mail)
 SELECT meno, priezvisko, mail
 FROM zamestnanec
 WHERE NOT EXISTS(SELECT * FROM doba_smlouvy D WHERE zamestnanec.rodne_cislo = D.rodne_cislo AND ucinost_od BETWEEN TO_DATE('01-01-2012', 'DD-MM-YYYY') AND TO_DATE('31-12-2014', 'DD-MM-YYYY'));
 
+--6. Vraci vsechny zamestnance, kteri jsou Python vyvojari podle rodneho cisla (dotaz s predikatem IN s vnorenym selectem)
+SELECT * FROM zamestnanec
+WHERE rodne_cislo IN (
+    SELECT rodne_cislo FROM vyvojar
+    WHERE prog_jazyk = 'Python'     --second condition
+);
+
+--7. Zobraz pocet aplikaci podle platformy a zobraz posledni verzi aplikace(2. GROUP BY, agregacni funkce)
+SELECT aplikace.platforma, COUNT(*) AS pocet_aplikacii, MAX(verze.datum_vydania) AS posledna_verzia
+FROM aplikace
+JOIN verze ON aplikace.id_aplikace = verze.id_aplikace
+GROUP BY aplikace.platforma;
