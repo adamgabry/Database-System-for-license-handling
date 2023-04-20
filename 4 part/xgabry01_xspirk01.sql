@@ -91,8 +91,8 @@ CREATE TABLE manazer (
 
 DROP SEQUENCE new_id_facebook;
 CREATE SEQUENCE new_id_facebook;
-CREATE OR REPLACE TRIGGER facebook_id_aplication;
-BEFORE INSERT
+BEFORE CREATE OR REPLACE TRIGGER facebook_id_aplication;
+INSERT
 ON aplikace FOR EACH ROW
 BEGIN
    IF:NEW.id_aplikace IS NULL THEN
