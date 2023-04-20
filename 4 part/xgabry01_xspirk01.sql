@@ -110,6 +110,23 @@ BEGIN
 END;
 /
 
+/* this should raise an error ORA-20001: Invalid webstranka for LINUX aplikace */
+
+/*
+INSERT INTO aplikace (nazov, popis, platforma, webstranka) 
+VALUES ('myapp', 'myapp description', 'LINUX', 'http://www.myapp.com');
+*/
+
+/*this shouldnt raise error*/
+INSERT INTO aplikace (nazov, popis, platforma, webstranka) 
+VALUES ('myapp2', 'myapp2 description', 'LINUX', 'http://www.myapp2.linux.com');
+
+/*check if prevent_delte trigger exists*/
+SELECT trigger_name, table_name, status
+FROM user_triggers
+WHERE trigger_name = 'PREVENT_DELETE';
+
+
 /*Trigger to prevent deleting a version that has been used in a contract:*/
 CREATE OR REPLACE TRIGGER prevent_delete
 BEFORE DELETE ON verze
@@ -119,20 +136,29 @@ DECLARE
 BEGIN
   SELECT COUNT(*) INTO l_count
   FROM pocet_instalaci
-  WHERE id_verze = :old.id_verze;
+  WHERE id_verze = :old.id_verze
+    AND id_zmluvy IS NOT NULL;
 
   IF l_count > 0 THEN
     RAISE_APPLICATION_ERROR(-20001, 'This version cannot be deleted because it has been used in a contract.');
   END IF;
 END;
 /
+
+/*this should raise this error:
+ORA-20001: This version cannot be deleted because it has been used in a contract.
+ORA-06512: at "YOUR_SCHEMA_NAME.PREVENT_DELETE", line 10
+ORA-04088: error during execution of trigger 'YOUR_SCHEMA_NAME.PREVENT_DELETE'
+*/
+
+
 ----------------INPUT TO TABLES--------------------
 
-INSERT INTO zamestnanec VALUES(3002056954, 'adam', 'Novak', '+091056789012', 'adamko@gmail.com');
-INSERT INTO zamestnanec VALUES(1202316955, 'marek', 'Hess', '+789654000012', 'marek123@gmail.com');
-INSERT INTO zamestnanec VALUES(2402056966, 'jan', 'Plecko', '+412356789012', 'plec123@gmail.com');
+INSERT INTO zamestnanec VALUES(3002056954, 'adam', 'Novak', '+420056789012', 'adamko@gmail.com');
+INSERT INTO zamestnanec VALUES(1202316955, 'marek', 'Hess', '+420654000012', 'marek123@gmail.com');
+INSERT INTO zamestnanec VALUES(2402056966, 'jan', 'Plecko', '+420356789012', 'plec123@gmail.com');
 INSERT INTO zamestnanec VALUES(2902316977, 'tomas', 'Hecko', '+456456789012', 'marek456@gmail.com');
-INSERT INTO zamestnanec VALUES(2402056986, 'janek', 'Plecko', '+498756789012', 'janek@gmail.com');
+INSERT INTO zamestnanec VALUES(2402056986, 'janek', 'Plecko', '+420756789012', 'janek@gmail.com');
 INSERT INTO zamestnanec VALUES(3002316977, 'jarek', 'Hecko', '+789654000012', 'marek789@gmail.com');
 
 
@@ -176,6 +202,36 @@ INSERT INTO pocet_instalaci(pocet_instalaci, ID_ZMLUVY, ID_VERZE) VALUES(200000,
 INSERT INTO pocet_instalaci(pocet_instalaci, ID_ZMLUVY, ID_VERZE) VALUES(1000000, 3, 3);
 
 COMMIT;
+
+----TRIGGER DELETE CHECK----
+-- This should raise an error message due to the prevent_delete trigger
+--DELETE FROM verze WHERE id_verze = 3;
+
+
+EXPLAIN PLAN FOR
+SELECT z.RODNE_CISLO AS RODNE_CISLO, z.MENO AS meno, z.telefon AS telefon, COUNT(v.RODNE_CISLO) AS VYVOJAR
+FROM ZAMESTNANEC z JOIN VYVOJAR v ON z.RODNE_CISLO = v.RODNE_CISLO
+WHERE z.telefon LIKE '+420%' AND v.prog_jazyk = 'Python'
+GROUP BY z.RODNE_CISLO, z.MENO, z.telefon
+HAVING COUNT(v.RODNE_CISLO) > 0
+ORDER BY z.RODNE_CISLO;
+
+SELECT * FROM TABLE(dbms_xplan.display);
+
+CREATE INDEX tel_zamestanec ON ZAMESTNANEC (telefon);
+
+EXPLAIN PLAN FOR
+SELECT z.RODNE_CISLO AS RODNE_CISLO, z.MENO AS meno, z.telefon AS telefon, COUNT(v.RODNE_CISLO) AS VYVOJAR
+FROM ZAMESTNANEC z JOIN VYVOJAR v ON z.RODNE_CISLO = v.RODNE_CISLO
+WHERE z.telefon LIKE '+420%' AND v.prog_jazyk = 'Python'
+GROUP BY z.RODNE_CISLO, z.MENO, z.telefon 
+HAVING COUNT(v.RODNE_CISLO) > 0
+ORDER BY z.RODNE_CISLO;
+
+SELECT * FROM TABLE(dbms_xplan.display);
+
+
+
 
 --1. Vypise zamestnanca spolu s programovacim jazykom, ktory ovlada
 SELECT meno, priezvisko, prog_jazyk AS Jazyk
