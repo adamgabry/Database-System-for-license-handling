@@ -90,18 +90,24 @@ CREATE TABLE manazer (
 -------------------Triggers------------------------
 
 DROP SEQUENCE new_id_facebook;
+
 CREATE SEQUENCE new_id_facebook;
-BEFORE CREATE OR REPLACE TRIGGER facebook_id_aplication;
-INSERT
-ON aplikace FOR EACH ROW
+
+CREATE OR REPLACE TRIGGER aplikace_platforma_trigger
+BEFORE INSERT OR UPDATE ON aplikace
+FOR EACH ROW
 BEGIN
-   IF:NEW.id_aplikace IS NULL THEN
-   :NEW.id_aplikace := new_id_facebook.NEXTVAL;
-   END IF;
+  IF (:NEW.platforma = 'LINUX' AND :NEW.webstranka NOT LIKE '%.linux%') THEN
+    RAISE_APPLICATION_ERROR(-20001, 'Invalid webstranka for LINUX aplikace');
+  END IF;
 END;
 /
-
-
+/*
+This trigger checks whether a new or updated row in the aplikace table has a platforma value of 'LINUX',
+and if it does, it checks that the webstranka column contains the substring '.linux'.
+If the webstranka value is invalid, it raises an error with a custom error message (-20001).
+This trigger can help ensure data integrity and prevent incorrect data from being inserted or updated in the aplikace table.
+*/
 
 ----------------INPUT TO TABLES--------------------
 
