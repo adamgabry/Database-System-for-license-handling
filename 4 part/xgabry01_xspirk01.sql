@@ -89,6 +89,13 @@ CREATE TABLE manazer (
 );
 -------------------Triggers------------------------
 
+/*
+This trigger checks whether a new or updated row in the aplikace table has a platforma value of 'LINUX',
+and if it does, it checks that the webstranka column contains the substring '.linux'.
+If the webstranka value is invalid, it raises an error with a custom error message (-20001).
+This trigger can help ensure data integrity and prevent incorrect data from being inserted or updated in the aplikace table.
+*/
+
 DROP SEQUENCE new_id_facebook;
 
 CREATE SEQUENCE new_id_facebook;
@@ -102,13 +109,23 @@ BEGIN
   END IF;
 END;
 /
-/*
-This trigger checks whether a new or updated row in the aplikace table has a platforma value of 'LINUX',
-and if it does, it checks that the webstranka column contains the substring '.linux'.
-If the webstranka value is invalid, it raises an error with a custom error message (-20001).
-This trigger can help ensure data integrity and prevent incorrect data from being inserted or updated in the aplikace table.
-*/
 
+/*Trigger to prevent deleting a version that has been used in a contract:*/
+CREATE OR REPLACE TRIGGER prevent_delete
+BEFORE DELETE ON verze
+FOR EACH ROW
+DECLARE
+  l_count INTEGER;
+BEGIN
+  SELECT COUNT(*) INTO l_count
+  FROM pocet_instalaci
+  WHERE id_verze = :old.id_verze;
+
+  IF l_count > 0 THEN
+    RAISE_APPLICATION_ERROR(-20001, 'This version cannot be deleted because it has been used in a contract.');
+  END IF;
+END;
+/
 ----------------INPUT TO TABLES--------------------
 
 INSERT INTO zamestnanec VALUES(3002056954, 'adam', 'Novak', '+091056789012', 'adamko@gmail.com');
