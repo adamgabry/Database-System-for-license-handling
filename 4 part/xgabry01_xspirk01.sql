@@ -41,7 +41,7 @@ CREATE TABLE organizace (
     sidlo VARCHAR(50) NOT NULL,
     pravna_forma VARCHAR(100) NOT NULL,
     predmet_podnikania VARCHAR(150) NOT NULL,
-    iban  VARCHAR(30) NOT NULL CHECK (REGEXP_LIKE(iban, 'CZ\d{2}[ ]\d{4}[ ]\d{4}[ ]\d{4}[ ]\d{4}[ ]\d{4}|CZ\d{22}')) --check validnÃ½ input pre IBAN
+    iban  VARCHAR(30) NOT NULL CHECK (REGEXP_LIKE(iban, 'CZ\d{2}[ ]\d{4}[ ]\d{4}[ ]\d{4}[ ]\d{4}[ ]\d{4}|CZ\d{22}')) --check validný input pre IBAN
 );
 
 CREATE TABLE zamestnanec (
@@ -97,9 +97,7 @@ This trigger can help ensure data integrity and prevent incorrect data from bein
 */
 
 DROP SEQUENCE new_id_facebook;
-
 CREATE SEQUENCE new_id_facebook;
-
 CREATE OR REPLACE TRIGGER aplikace_platforma_trigger
 BEFORE INSERT OR UPDATE ON aplikace
 FOR EACH ROW
@@ -218,7 +216,7 @@ ORDER BY z.RODNE_CISLO;
 
 SELECT * FROM TABLE(dbms_xplan.display);
 
-CREATE INDEX tel_zamestanec ON ZAMESTNANEC (telefon);
+CREATE INDEX tel_zamestnanec ON ZAMESTNANEC (telefon);
 
 EXPLAIN PLAN FOR
 SELECT z.RODNE_CISLO AS RODNE_CISLO, z.MENO AS meno, z.telefon AS telefon, COUNT(v.RODNE_CISLO) AS VYVOJAR
@@ -268,3 +266,20 @@ SELECT aplikace.platforma, COUNT(*) AS pocet_aplikacii, MAX(verze.datum_vydania)
 FROM aplikace
 JOIN verze ON aplikace.id_aplikace = verze.id_aplikace
 GROUP BY aplikace.platforma;
+
+----------------Pristupove prava---------------------
+GRANT ALL ON aplikace TO XGABRY01;
+GRANT ALL ON verze TO XGABRY01;
+GRANT ALL ON organizace TO XGABRY01;
+GRANT ALL ON zamestnanec TO XGABRY01;
+GRANT ALL ON smlouva TO XGABRY01;
+GRANT ALL ON manazer TO XGABRY01;
+GRANT ALL ON vyvojar TO XGABRY01;
+GRANT ALL ON doba_smlouvy TO XGABRY01;
+GRANT ALL ON pocet_instalaci TO XGABRY01;
+
+--dorobit grant na materialized view
+--GRANT ALL ON manazer TO XGABRY01;
+
+--dorobit grant na proceduru
+--GRANT EXECUTE ON _______ TO XGABRY01;
