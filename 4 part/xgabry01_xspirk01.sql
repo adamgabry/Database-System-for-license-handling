@@ -15,7 +15,6 @@ DROP TABLE manazer CASCADE CONSTRAINTS;
 DROP TABLE vyvojar CASCADE CONSTRAINTS;
 DROP TABLE doba_smlouvy CASCADE CONSTRAINTS;
 DROP TABLE pocet_instalaci CASCADE CONSTRAINTS;
-
 ----------------MAKE TABLES--------------------
 
 CREATE TABLE aplikace (
@@ -268,3 +267,89 @@ SELECT aplikace.platforma, COUNT(*) AS pocet_aplikacii, MAX(verze.datum_vydania)
 FROM aplikace
 JOIN verze ON aplikace.id_aplikace = verze.id_aplikace
 GROUP BY aplikace.platforma;
+
+/*
+*This query retrieves the count of installations for each application version, using the pocet_instalaci table and grouping by verze.id_aplikace.
+*It then joins this result with the aplikace table to get the application name, description, platform, and installation count for each application.
+*/
+WITH install_counts AS (
+    SELECT v.id_aplikace, SUM(pi.pocet_instalaci) AS count
+    FROM pocet_instalaci pi
+    JOIN verze v ON v.id_verze = pi.id_verze
+    GROUP BY v.id_aplikace
+)
+SELECT a.nazov, a.popis, a.platforma,
+    CASE 
+        WHEN ic.count IS NULL THEN 'No installations'
+        WHEN ic.count <= 10000 THEN 'Few installations'
+        WHEN ic.count > 10000 AND ic.count <= 200000 THEN 'Some installations'
+        ELSE 'Many installations'
+    END AS install_count_description
+FROM aplikace a
+LEFT JOIN install_counts ic ON a.id_aplikace = ic.id_aplikace;
+/*works until here*/
+
+
+/*
+This stored procedure will insert a new row into the "zamestnanec" table and then select all the rows from the table.
+The procedure will use a cursor to loop through the table rows and print each row's details.
+*/
+CREATE OR REPLACE PROCEDURE insert_and_select_zamestnanec (
+    p_rc zamestnanec.rodne_cislo%TYPE,
+    p_meno zamestnanec.meno%TYPE,
+    p_priezvisko zamestnanec.priezvisko%TYPE,
+    p_telefon zamestnanec.telefon%TYPE,
+    p_email zamestnanec.mail%TYPE
+)
+IS
+    v_zamestnanec zamestnanec%ROWTYPE;
+    CURSOR c_zamestnanci IS SELECT * FROM zamestnanec;
+BEGIN
+    INSERT INTO zamestnanec VALUES(p_rc, p_meno, p_priezvisko, p_telefon, p_email);
+    
+    FOR v_zamestnanec IN c_zamestnanci LOOP
+        DBMS_OUTPUT.PUT_LINE('Rodne cislo: ' || v_zamestnanec.rodne_cislo || ', Meno: ' || v_zamestnanec.meno || ', priezvisko: ' || v_zamestnanec.priezvisko || ', Telefon: ' || v_zamestnanec.telefon || ', Email: ' || v_zamestnanec.mail || CHR(10));
+    END LOOP;
+    DBMS_OUTPUT.PUT_LINE('Pridani noveho zamestnance' || CHR(10));
+EXCEPTION
+    WHEN OTHERS THEN
+        DBMS_OUTPUT.PUT_LINE('An error occurred: ' || SQLERRM);
+END;
+/
+SET SERVEROUTPUT ON;
+BEGIN
+insert_and_select_zamestnanec(9510191234, 'John', 'Doe', '+123456789012', 'johndoe@gmail.com');
+insert_and_select_zamestnanec(9003175678, 'Jane', 'Doe', '+987654321012', 'janedoe@gmail.com');
+insert_and_select_zamestnanec(7402046789, 'Bob', 'Smith', '+420123456789', 'bobsmith@gmail.com');
+insert_and_select_zamestnanec(8612048765, 'Alice', 'Johnson', '+144356789012', 'alicejohnson@gmail.com');
+END;
+/
+/*works until here*/
+
+/*
+This stored procedure takes a "rodne_cislo" parameter and updates the "prog_jazyk" column for the given value to "Python".
+It then selects all rows from the "vyvojar" table where "prog_jazyk" is "Python" using a cursor and loops through the selected rows,
+printing each row's "rodne_cislo" and "prog_jazyk" values using the DBMS_OUTPUT.PUT_LINE procedure.
+*/
+CREATE OR REPLACE PROCEDURE update_and_select_pythons
+    (p_rodne_cislo IN NUMBER)
+IS
+    CURSOR c_vyvojari IS
+        SELECT *
+        FROM vyvojar
+        WHERE prog_jazyk = 'Python';
+BEGIN
+    -- update prog_jazyk for the given rodne_cislo
+    UPDATE vyvojar
+    SET prog_jazyk = 'Python'
+    WHERE rodne_cislo = p_rodne_cislo;
+    
+    -- loop through the selected rows and print their details
+    FOR vyvojar_row IN c_vyvojari LOOP
+        DBMS_OUTPUT.PUT_LINE('Rodne cislo: ' || vyvojar_row.rodne_cislo ||
+                             ', Prog jazyk: ' || vyvojar_row.prog_jazyk);
+    END LOOP;
+END;
+/
+
+EXECUTE update_and_select_pythons('2402056966');
