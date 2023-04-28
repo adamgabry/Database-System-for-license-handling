@@ -18,7 +18,7 @@ DROP TABLE pocet_instalaci CASCADE CONSTRAINTS;
 ----------------MAKE TABLES--------------------
 
 CREATE TABLE aplikace (
-    id_aplikace INT GENERATED ALWAYS AS IDENTITY (START WITH 1 increment by 1) primary key,
+    id_aplikace INT GENERATED ALWAYS AS IDENTITY (START WITH 1 increment by 1) not NULL primary key,
     nazov VARCHAR(255) NOT NULL,
     popis VARCHAR(255),
     platforma VARCHAR(7) CHECK (platforma IN('IOS', 'Android', 'LINUX', 'Windows')),
@@ -26,7 +26,7 @@ CREATE TABLE aplikace (
 );
 
 CREATE TABLE verze (
-    id_verze INT GENERATED ALWAYS AS IDENTITY (START WITH 1 increment by 1) primary key,
+    id_verze INT GENERATED ALWAYS AS IDENTITY (START WITH 1 increment by 1) not NULL primary key,
     nazov VARCHAR(255) NOT NULL,
     popis VARCHAR(500) NOT NULL,
     datum_vydania DATE NOT NULL,
@@ -40,7 +40,7 @@ CREATE TABLE organizace (
     sidlo VARCHAR(50) NOT NULL,
     pravna_forma VARCHAR(100) NOT NULL,
     predmet_podnikania VARCHAR(150) NOT NULL,
-    iban  VARCHAR(30) NOT NULL CHECK (REGEXP_LIKE(iban, 'CZ\d{2}[ ]\d{4}[ ]\d{4}[ ]\d{4}[ ]\d{4}[ ]\d{4}|CZ\d{22}')) --check validný input pre IBAN
+    iban  VARCHAR(30) NOT NULL CHECK (REGEXP_LIKE(iban, 'CZ\d{2}[ ]\d{4}[ ]\d{4}[ ]\d{4}[ ]\d{4}[ ]\d{4}|CZ\d{22}')) --check validn� input pre IBAN
 );
 
 CREATE TABLE zamestnanec (
@@ -52,7 +52,7 @@ CREATE TABLE zamestnanec (
 );
 
 CREATE TABLE smlouva (
-    id_zmluvy INT GENERATED ALWAYS AS IDENTITY (START WITH 1 increment by 1) primary key,
+    id_zmluvy INT GENERATED ALWAYS AS IDENTITY (START WITH 1 increment by 1) not NULL primary key,
     datum_zavretia DATE NOT NULL,
     predavajuci VARCHAR(100) NOT NULL,
     kupujuci VARCHAR(100) NOT NULL
@@ -96,9 +96,7 @@ This trigger can help ensure data integrity and prevent incorrect data from bein
 */
 
 DROP SEQUENCE new_id_facebook;
-
 CREATE SEQUENCE new_id_facebook;
-
 CREATE OR REPLACE TRIGGER aplikace_platforma_trigger
 BEFORE INSERT OR UPDATE ON aplikace
 FOR EACH ROW
@@ -217,7 +215,7 @@ ORDER BY z.RODNE_CISLO;
 
 SELECT * FROM TABLE(dbms_xplan.display);
 
-CREATE INDEX tel_zamestanec ON ZAMESTNANEC (telefon);
+CREATE INDEX tel_zamestnanec ON ZAMESTNANEC (telefon);
 
 EXPLAIN PLAN FOR
 SELECT z.RODNE_CISLO AS RODNE_CISLO, z.MENO AS meno, z.telefon AS telefon, COUNT(v.RODNE_CISLO) AS VYVOJAR
@@ -228,7 +226,6 @@ HAVING COUNT(v.RODNE_CISLO) > 0
 ORDER BY z.RODNE_CISLO;
 
 SELECT * FROM TABLE(dbms_xplan.display);
-
 
 
 
@@ -267,6 +264,40 @@ SELECT aplikace.platforma, COUNT(*) AS pocet_aplikacii, MAX(verze.datum_vydania)
 FROM aplikace
 JOIN verze ON aplikace.id_aplikace = verze.id_aplikace
 GROUP BY aplikace.platforma;
+
+----------------Pristupove prava---------------------
+GRANT ALL ON aplikace TO XGABRY01;
+GRANT ALL ON verze TO XGABRY01;
+GRANT ALL ON organizace TO XGABRY01;
+GRANT ALL ON zamestnanec TO XGABRY01;
+GRANT ALL ON smlouva TO XGABRY01;
+GRANT ALL ON manazer TO XGABRY01;
+GRANT ALL ON vyvojar TO XGABRY01;
+GRANT ALL ON doba_smlouvy TO XGABRY01;
+GRANT ALL ON pocet_instalaci TO XGABRY01;
+GRANT ALL ON zoznam_zamestnancov TO XSPIRK01;
+
+--dorobit grant na proceduru
+--GRANT EXECUTE ON _______ TO XGABRY01;
+
+
+----------------Materized view---------------------
+DROP MATERIALIZED VIEW zoznam_zamestnancov;
+CREATE MATERIALIZED VIEW LOG ON zamestnanec WITH PRIMARY KEY, ROWID (meno, priezvisko, telefon)INCLUDING NEW VALUES;
+CREATE MATERIALIZED VIEW zoznam_zamestnancov
+BUILD IMMEDIATE
+REFRESH ON COMMIT
+AS
+    SELECT Z.meno, z.priezvisko, Z.telefon
+    FROM zamestnanec Z;
+
+SELECT * FROM zoznam_zamestnancov;
+
+UPDATE XSPIRK01.zamestnanec SET meno = 'Lubos' WHERE rodne_cislo = 2402056966;
+COMMIT;
+
+SELECT * FROM zoznam_zamestnancov;
+
 
 /*
 *This query retrieves the count of installations for each application version, using the pocet_instalaci table and grouping by verze.id_aplikace.
