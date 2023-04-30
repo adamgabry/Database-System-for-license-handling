@@ -89,10 +89,10 @@ CREATE TABLE manazer (
 -------------------Triggers------------------------
 
 /*
-This trigger checks whether a new or updated row in the aplikace table has a platforma value of 'LINUX',
-and if it does, it checks that the webstranka column contains the substring '.linux'.
-If the webstranka value is invalid, it raises an error with a custom error message (-20001).
-This trigger can help ensure data integrity and prevent incorrect data from being inserted or updated in the aplikace table.
+Tento spoustec kontroluje, zda novy nebo aktualizovany radek v tabulce aplikace ma hodnotu platformy 'LINUX',
+a pokud ano, zkontroluje, zda sloupec webstranka obsahuje podretezec '.linux'.
+Pokud je hodnota webstranka neplatna, vyvola chybu s vlastni chybovou zpravou (-20001).
+Tento spoustec muze pomoci zajistit integritu dat a zabranit vlozeni nebo aktualizaci nespravnych dat do tabulky aplikace.
 */
 
 DROP SEQUENCE new_id_facebook;
@@ -107,24 +107,23 @@ BEGIN
 END;
 /
 
-/* this should raise an error ORA-20001: Invalid webstranka for LINUX aplikace */
 
 /*
 INSERT INTO aplikace (nazov, popis, platforma, webstranka) 
 VALUES ('myapp', 'myapp description', 'LINUX', 'http://www.myapp.com');
 */
 
-/*this shouldnt raise error*/
+/*toto by nemelo vyvolat error pokud se odkomentuje kod nad*/
+/*po odkomentovani dostaneme chybu ORA-20001: Invalid webstranka for LINUX aplikace */
 INSERT INTO aplikace (nazov, popis, platforma, webstranka) 
 VALUES ('myapp2', 'myapp2 description', 'LINUX', 'http://www.myapp2.linux.com');
 
-/*check if prevent_delte trigger exists*/
+/*zkontrolujte, zda existuje trigger prevent_delte*/
 SELECT trigger_name, table_name, status
 FROM user_triggers
 WHERE trigger_name = 'PREVENT_DELETE';
 
-
-/*Trigger to prevent deleting a version that has been used in a contract:*/
+/*Spouštěč, který zabrání smazání verze, která byla použita ve smlouvě:*/
 CREATE OR REPLACE TRIGGER prevent_delete
 BEFORE DELETE ON verze
 FOR EACH ROW
@@ -142,10 +141,10 @@ BEGIN
 END;
 /
 
-/*this should raise this error:
+/*toto by melo vyvolat tento error:
 ORA-20001: This version cannot be deleted because it has been used in a contract.
-ORA-06512: at "YOUR_SCHEMA_NAME.PREVENT_DELETE", line 10
-ORA-04088: error during execution of trigger 'YOUR_SCHEMA_NAME.PREVENT_DELETE'
+ORA-06512: at "SCHEMA.PREVENT_DELETE", line 10
+ORA-04088: error during execution of trigger 'SCHEMA.PREVENT_DELETE'
 */
 
 
@@ -201,8 +200,9 @@ INSERT INTO pocet_instalaci(pocet_instalaci, ID_ZMLUVY, ID_VERZE) VALUES(1000000
 COMMIT;
 
 ----TRIGGER DELETE CHECK----
--- This should raise an error message due to the prevent_delete trigger
---DELETE FROM verze WHERE id_verze = 3;
+
+-- To by melo vyvolat chybovou zpravu kvuli spousteci prevent_delete
+-- DELETE FROM verze WHERE id_verze = 3;
 
 
 EXPLAIN PLAN FOR
@@ -276,12 +276,10 @@ GRANT ALL ON vyvojar TO XGABRY01;
 GRANT ALL ON doba_smlouvy TO XGABRY01;
 GRANT ALL ON pocet_instalaci TO XGABRY01;
 GRANT ALL ON zoznam_zamestnancov TO XSPIRK01;
+GRANT EXECUTE ON insert_and_select_zamestnanec TO XGABRY01;
+GRANT EXECUTE ON update_and_select_pythons TO XGABRY01;
 
---dorobit grant na proceduru
---GRANT EXECUTE ON _______ TO XGABRY01;
-
-
-----------------Materized view---------------------
+----------------Materializovany pohled---------------------
 DROP MATERIALIZED VIEW zoznam_zamestnancov;
 CREATE MATERIALIZED VIEW LOG ON zamestnanec WITH PRIMARY KEY, ROWID (meno, priezvisko, telefon)INCLUDING NEW VALUES;
 CREATE MATERIALIZED VIEW zoznam_zamestnancov
@@ -298,11 +296,13 @@ COMMIT;
 
 SELECT * FROM zoznam_zamestnancov;
 
-
 /*
-*This query retrieves the count of installations for each application version, using the pocet_instalaci table and grouping by verze.id_aplikace.
-*It then joins this result with the aplikace table to get the application name, description, platform, and installation count for each application.
+* Tento dotaz načte počet instalací pro každou verzi aplikace pomocí tabulky pocet_instalaci
+* a seskupuje podle verze.id_aplikace.
+* Poté spojí tento výsledek s tabulkou aplikací a získá název aplikace,
+* popis, platformu a počet instalací pro každou aplikaci.
 */
+
 WITH install_counts AS (
     SELECT v.id_aplikace, SUM(pi.pocet_instalaci) AS count
     FROM pocet_instalaci pi
@@ -311,20 +311,19 @@ WITH install_counts AS (
 )
 SELECT a.nazov, a.popis, a.platforma,
     CASE 
-        WHEN ic.count IS NULL THEN 'No installations'
-        WHEN ic.count <= 10000 THEN 'Few installations'
-        WHEN ic.count > 10000 AND ic.count <= 200000 THEN 'Some installations'
-        ELSE 'Many installations'
+        WHEN ic.count IS NULL THEN 'Zadne instalace'
+        WHEN ic.count <= 10000 THEN 'Malo instalaci'
+        WHEN ic.count > 10000 AND ic.count <= 200000 THEN 'Stredni mnozstvi instalaci'
+        ELSE 'Velke mnozstvi instalaci'
     END AS install_count_description
 FROM aplikace a
 LEFT JOIN install_counts ic ON a.id_aplikace = ic.id_aplikace;
-/*works until here*/
-
 
 /*
-This stored procedure will insert a new row into the "zamestnanec" table and then select all the rows from the table.
-The procedure will use a cursor to loop through the table rows and print each row's details.
+Tato ulozena procedura vlozi novy radek do tabulky "zamestnanec" a pote vybere vsechny radky z tabulky.
+Postup pouzije kurzor k prochazeni radku tabulky a vytiskne podrobnosti kazdeho radku.
 */
+
 CREATE OR REPLACE PROCEDURE insert_and_select_zamestnanec (
     p_rc zamestnanec.rodne_cislo%TYPE,
     p_meno zamestnanec.meno%TYPE,
@@ -347,7 +346,8 @@ EXCEPTION
         DBMS_OUTPUT.PUT_LINE('An error occurred: ' || SQLERRM);
 END;
 /
-SET SERVEROUTPUT ON;
+SET SERVEROUTPUT ON; --aby fungovalo DBMS_OUTPUT.PUT_LINE
+
 BEGIN
 insert_and_select_zamestnanec(9510191234, 'John', 'Doe', '+123456789012', 'johndoe@gmail.com');
 insert_and_select_zamestnanec(9003175678, 'Jane', 'Doe', '+987654321012', 'janedoe@gmail.com');
@@ -355,12 +355,11 @@ insert_and_select_zamestnanec(7402046789, 'Bob', 'Smith', '+420123456789', 'bobs
 insert_and_select_zamestnanec(8612048765, 'Alice', 'Johnson', '+144356789012', 'alicejohnson@gmail.com');
 END;
 /
-/*works until here*/
 
 /*
-This stored procedure takes a "rodne_cislo" parameter and updates the "prog_jazyk" column for the given value to "Python".
-It then selects all rows from the "vyvojar" table where "prog_jazyk" is "Python" using a cursor and loops through the selected rows,
-printing each row's "rodne_cislo" and "prog_jazyk" values using the DBMS_OUTPUT.PUT_LINE procedure.
+Tato ulozena procedura pracuje se vstupnim parametrem "rodne_cislo" a aktualizuje sloupec "prog_jazyk" pro danou hodnotu na "Python".
+Pote vybere vsechny rady z tabulky "vyvojar", kde "prog_jazyk" je "Python" pomoci kurzoru a prochazi vybrane radky,
+tisk hodnot "rodne_cislo" a "prog_jazyk" kazdeho radku pomoci procedury DBMS_OUTPUT.PUT_LINE.
 */
 CREATE OR REPLACE PROCEDURE update_and_select_pythons
     (p_rodne_cislo IN NUMBER)
@@ -370,12 +369,12 @@ IS
         FROM vyvojar
         WHERE prog_jazyk = 'Python';
 BEGIN
-    -- update prog_jazyk for the given rodne_cislo
+    -- aktualizuj prog_jazyk pro dane rodne_cislo
     UPDATE vyvojar
     SET prog_jazyk = 'Python'
     WHERE rodne_cislo = p_rodne_cislo;
     
-    -- loop through the selected rows and print their details
+    -- iteruj pres vybrane radky a vytiskni jejich detaily
     FOR vyvojar_row IN c_vyvojari LOOP
         DBMS_OUTPUT.PUT_LINE('Rodne cislo: ' || vyvojar_row.rodne_cislo ||
                              ', Prog jazyk: ' || vyvojar_row.prog_jazyk);
